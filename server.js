@@ -14,7 +14,7 @@ app.use(bodyParser.urlencoded())
 app.use(bodyParser.json())
 
 app.get('/', (req, res) => {
-  const page = parseInt(req.query.page) || 1
+  const page = req.query.page || 1
   const limit = 2
   const offset = (page - 1) * limit
 
@@ -32,7 +32,14 @@ app.get('/', (req, res) => {
   }
 
   let sql = 'SELECT COUNT (*) AS total FROM siswa';
-  db.get(sql, (err, { total }) => {
+  
+   if (queries.length > 0) {
+      sql += ` WHERE ${queries.join(' AND ')}`
+    }
+
+    console.log(sql, 'count')
+
+  db.get(sql, params, (err, { total }) => {
 
     if (err) console.log(err)
 
@@ -51,9 +58,9 @@ app.get('/', (req, res) => {
     db.all(sql, params, (err, rows) => {
       if (err) {
         console.log(err)
-        return res.render('table', { rows: [], query: req.query });
+      
       }
-      res.render('table', { rows, query: req.query, pages, page });
+      res.render('table', { rows, query: req.query, pages, page: parseInt(page), url: new URLSearchParams({...req.query, page }).toString() });
     })
   })
 });
