@@ -14,8 +14,47 @@ app.use(bodyParser.urlencoded())
 app.use(bodyParser.json())
 
 app.get('/', (req, res) => {
-  db.all('SELECT * FROM siswa', (err, rows) => {
-    res.render('table', { rows });
+  const page = parseInt(req.query.page) || 1
+  const limit = 2
+  const offset = (page - 1) * limit
+
+  const queries = []
+  const params = []
+
+  if (req.query.name) {
+    queries.push("name like '%' || ? || '%'")
+    params.push(req.query.name)
+  }
+
+  if (req.query.isMarried) {
+    queries.push('isMarried = ?')
+    params.push(JSON.parse(req.query.isMarried))
+  }
+
+  let sql = 'SELECT COUNT (*) AS total FROM siswa';
+  db.get(sql, (err, { total }) => {
+
+    if (err) console.log(err)
+
+    const pages = Math.ceil(total / limit)
+
+    sql = 'SELECT * FROM siswa';
+
+
+    if (queries.length > 0) {
+      sql += ` WHERE ${queries.join(' AND ')}`
+    }
+
+    sql += ` LIMIT ? OFFSET ?`
+    params.push(limit, offset)
+
+    db.all(sql, params, (err, rows) => {
+      if (err) {
+        console.log(err)
+        return res.render('table', { rows: [], query: req.query });
+      }
+      res.render('table', { rows, query: req.query, pages, page });
+    })
   })
 });
 
@@ -36,7 +75,7 @@ app.get('/edit/:id', (req, res) => {
   const id = req.params.id
   db.get("SELECT * FROM siswa WHERE id = ?", [id], (err, item) => {
     if (err) console.log(err)
-    res.render('form', {item})
+    res.render('form', { item })
   })
 })
 
