@@ -49,8 +49,8 @@
                         <div class="col-sm-10">
                             <select class="form-control" name="isMarried" required>
                                 <option value="" disabled selected>have you married ?</option>
-                                <option value="false" <%=item.isMarried ? '' : ' selected' %>>Not yet</option>
-                                <option value="true" <%=item.isMarried ? ' selected' : '' %>>yes</option>
+                                <option value="false" <%=item.isMarried == false ? ' selected' : '' %>>Not yet</option>
+                                <option value="true" <%=item.isMarried == true ? ' selected' : '' %>>yes</option>
                             </select>
                         </div>
                     </div>
