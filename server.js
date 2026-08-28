@@ -25,19 +25,37 @@ app.get('/', (req, res) => {
     queries.push("name like '%' || ? || '%'")
     params.push(req.query.name)
   }
+  if (req.query.height) {
+    queries.push('height = ?')
+    params.push(parseFloat(req.query.height))
+  }
 
+  if (req.query.weight) {
+    queries.push('weight = ?')
+    params.push(parseFloat(req.query.weight))
+  }
+  if (req.query.startdate && req.query.enddate) {
+    queries.push('birthdate BETWEEN ? AND ?')
+    params.push(req.query.startdate, req.query.enddate)
+  } else if (req.query.startdate) {
+    queries.push('birthdate >= ?')
+    params.push(req.query.startdate)
+  } else if (req.query.enddate) {
+    queries.push('birthdate <= ?')
+    params.push(req.query.enddate)
+  }
   if (req.query.isMarried) {
     queries.push('isMarried = ?')
     params.push(JSON.parse(req.query.isMarried))
   }
 
   let sql = 'SELECT COUNT (*) AS total FROM siswa';
-  
-   if (queries.length > 0) {
-      sql += ` WHERE ${queries.join(' AND ')}`
-    }
 
-    console.log(sql, 'count')
+  if (queries.length > 0) {
+    sql += ` WHERE ${queries.join(' AND ')}`
+  }
+
+  console.log(sql, 'count')
 
   db.get(sql, params, (err, { total }) => {
 
@@ -58,9 +76,9 @@ app.get('/', (req, res) => {
     db.all(sql, params, (err, rows) => {
       if (err) {
         console.log(err)
-      
+
       }
-      res.render('table', { rows, query: req.query, pages, page: parseInt(page), url: new URLSearchParams({...req.query, page }).toString() });
+      res.render('table', { rows, query: req.query, pages, page: parseInt(page), url: new URLSearchParams({ ...req.query, page }).toString() });
     })
   })
 });
